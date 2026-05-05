@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>REEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:      #F5F0E8;
+  --bg2:     #EDE8DC;
+  --bg3:     #E2DBCC;
+  --panel:   #1A1510;
+  --border:  rgba(26,21,16,0.12);
+  --border2: rgba(26,21,16,0.22);
+  --ink:     #1A1510;
+  --ink2:    #4A3F30;
+  --ink3:    #8A7A65;
+  --red:     #8B2500;
+  --cream:   #F5F0E8;
+  --mono:    'Courier Prime', 'Courier New', monospace;
+  --display: 'Special Elite', serif;
+  --ui:      'DM Mono', monospace;
+  --radius:  0px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* paper texture */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 100; opacity: .7;
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: var(--mono); }
+input, textarea, select { font-family: var(--mono); }
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--ink3); }
+
+/* ── LAYOUT ── */
+.shell {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ── */
+aside {
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0; height: 100vh;
+  overflow-y: auto;
+  padding: 0 0 1.5rem;
+}
+
+.logo {
+  padding: 1.75rem 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.logo-word {
+  font-family: var(--display);
+  font-size: 2rem;
+  color: var(--cream);
+  letter-spacing: .08em;
+  line-height: 1;
+}
+.logo-sub {
+  font-family: var(--ui);
+  font-size: .55rem;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,.25);
+  margin-top: .4rem;
+}
+
+nav { padding: 1.25rem 0; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .6rem 1.25rem;
+  font-family: var(--ui);
+  font-size: .62rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,.35);
+  cursor: pointer;
+  transition: color .15s, background .15s;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+.nav-item:hover { color: rgba(245,240,232,.7); }
+.nav-item.active {
+  color: var(--cream);
+  border-left-color: var(--cream);
+  background: rgba(245,240,232,.04);
+}
+.nav-icon { font-size: .8rem; width: 14px; text-align: center; opacity: .7; }
+
+.sidebar-stats {
+  padding: 1.25rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.stat { margin-bottom: .85rem; }
+.stat-label {
+  font-family: var(--ui);
+  font-size: .52rem; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(245,240,232,.25); margin-bottom: .2rem;
+}
+.stat-val {
+  font-family: var(--display);
+  font-size: 1.5rem; color: rgba(245,240,232,.7); line-height: 1;
+}
+
+/* ── MAIN ── */
+main { overflow-y: auto; background: var(--bg); }
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: flex-start;
+  padding: .75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky; top: 0; z-index: 50;
+  gap: .6rem;
+}
+.topbar .search-wrap { flex: 1; max-width: 320px; }
+.topbar .btn-primary { margin-left: auto; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .45rem 1rem;
+  font-family: var(--ui);
+  font-size: .6rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  border: none;
+  font-weight: 500;
+  transition: all .15s;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--cream);
+  border: 1px solid var(--ink);
+}
+.btn-primary:hover { background: var(--ink2); border-color: var(--ink2); }
+.btn-ghost {
+  background: transparent;
+  color: var(--ink2);
+  border: 1px solid var(--border2);
+}
+.btn-ghost:hover { background: var(--bg2); color: var(--ink); }
+.btn-danger {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid rgba(139,37,0,.25);
+  font-size: .58rem;
+  padding: .28rem .6rem;
+}
+.btn-danger:hover { background: rgba(139,37,0,.06); }
+.btn-sm { font-size: .58rem; padding: .3rem .65rem; }
+
+/* ── SEARCH BAR ── */
+.search-wrap { position: relative; }
+.search-input {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--ink);
+  padding: .45rem 1rem .45rem 2rem;
+  font-size: .75rem;
+  width: 100%;
+  outline: none;
+  transition: border .2s;
+  font-family: var(--mono);
+}
+.search-input:focus { border-color: var(--ink); }
+.search-input::placeholder { color: var(--ink3); }
+.search-icon {
+  position: absolute; left: .65rem; top: 50%; transform: translateY(-50%);
+  color: var(--ink3); font-size: .75rem; pointer-events: none;
+}
+.search-results {
+  position: absolute; top: calc(100% + 3px); left: 0; right: 0;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  z-index: 200; max-height: 360px; overflow-y: auto; display: none;
+}
+.search-results.show { display: block; }
+.search-result-item {
+  display: flex; gap: .75rem; align-items: flex-start;
+  padding: .7rem .9rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .1s;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--bg2); }
+.sr-poster {
+  width: 32px; height: 48px; object-fit: cover;
+  background: var(--bg3); flex-shrink: 0;
+}
+.sr-info { flex: 1; }
+.sr-title { font-size: .78rem; font-weight: 700; color: var(--ink); margin-bottom: .15rem; }
+.sr-meta { font-size: .62rem; color: var(--ink3); }
+.sr-type {
+  font-family: var(--ui); font-size: .5rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--red); border: 1px solid rgba(139,37,0,.3);
+  padding: .08rem .35rem; margin-left: .35rem;
+}
+
+/* ── CONTENT AREA ── */
+.content { padding: 1.5rem 1.75rem; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── FILTER ROW ── */
+.diary-filters {
+  display: flex; gap: 0; margin-bottom: 1.5rem;
+  border: 1px solid var(--border2); width: 100%;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.diary-filters::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0;
+  padding: .35rem .85rem;
+  font-family: var(--ui);
+  font-size: .58rem; letter-spacing: .16em; text-transform: uppercase;
+  border: none; border-right: 1px solid var(--border2);
+  color: var(--ink3); background: transparent; transition: all .15s;
+}
+.filter-chip:last-child { border-right: none; }
+.filter-chip:hover { color: var(--ink); background: var(--bg2); }
+.filter-chip.active { color: var(--cream); background: var(--ink); }
+
+/* ── DIARY GRID ── */
+.diary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.diary-card {
+  position: relative; cursor: pointer; transition: transform .15s;
+}
+.diary-card:hover { transform: translateY(-2px); }
+.diary-card:hover .card-overlay { opacity: 1; }
+
+.card-poster {
+  width: 100%; aspect-ratio: 2/3; object-fit: cover;
+  display: block; background: var(--bg3);
+  border: 1px solid var(--border);
+}
+.card-poster-placeholder {
+  width: 100%; aspect-ratio: 2/3; background: var(--bg2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: .4rem;
+  color: var(--ink3); font-size: .62rem; letter-spacing: .1em;
+  text-transform: uppercase; font-family: var(--ui);
+}
+.card-overlay {
+  position: absolute; inset: 0;
+  background: rgba(26,21,16,.92);
+  opacity: 0; transition: opacity .2s;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: .75rem;
+  border: 1px solid var(--border2);
+}
+.card-overlay-always {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(26,21,16,.95) 0%, transparent 100%);
+  padding: .6rem .6rem .5rem;
+}
+.card-title {
+  font-size: .72rem; font-weight: 700;
+  color: var(--cream); line-height: 1.3; margin-bottom: .15rem;
+}
+.card-year { font-family: var(--ui); font-size: .55rem; color: rgba(245,240,232,.45); }
+.card-rating { display: flex; gap: 1px; margin-bottom: .25rem; }
+.star { color: #C9A84C; font-size: .6rem; }
+.star.empty { color: rgba(245,240,232,.2); }
+.card-type-badge {
+  position: absolute; top: .45rem; right: .45rem;
+  font-family: var(--ui); font-size: .48rem; letter-spacing: .12em; text-transform: uppercase;
+  background: var(--ink); color: var(--cream);
+  padding: .12rem .38rem;
+}
+.card-list-badge {
+  position: absolute; top: .45rem; left: .45rem;
+  font-family: var(--ui); font-size: .48rem; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--red); color: var(--cream);
+  padding: .12rem .38rem;
+}
+
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--ink3); grid-column: 1/-1; }
+.empty-icon { font-size: 2rem; margin-bottom: .85rem; opacity: .35; }
+.empty-title {
+  font-family: var(--display); font-size: 1.2rem; color: var(--ink2); margin-bottom: .4rem;
+}
+.empty-desc { font-size: .78rem; line-height: 1.7; }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(26,21,16,.75);
+  z-index: 500; display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px); padding: 1rem;
+}
+.modal-backdrop.show { display: flex; }
+.modal {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+  position: relative;
+}
+/* ticket stub top */
+.modal::before {
+  content: '';
+  display: block; height: 4px;
+  background: repeating-linear-gradient(90deg, var(--ink) 0, var(--ink) 10px, transparent 10px, transparent 16px);
+}
+.modal-header {
+  padding: 1.25rem 1.5rem .85rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+}
+.modal-title { font-family: var(--display); font-size: 1.15rem; color: var(--ink); }
+.modal-close {
+  background: none; border: none; color: var(--ink3);
+  font-size: 1rem; line-height: 1; padding: 0; transition: color .15s;
+}
+.modal-close:hover { color: var(--ink); }
+.modal-body { padding: 1.25rem 1.5rem; }
+.modal-footer {
+  padding: .85rem 1.5rem 1.25rem;
+  display: flex; gap: .6rem; justify-content: flex-end;
+  border-top: 1px solid var(--border);
+}
+
+/* ── FORM ── */
+.form-row { margin-bottom: .95rem; }
+.form-label {
+  display: block; font-family: var(--ui);
+  font-size: .55rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: .35rem;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--ink); padding: .55rem .8rem;
+  font-size: .8rem; outline: none; transition: border .15s;
+  font-family: var(--mono);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--ink); }
+.form-textarea { resize: vertical; min-height: 85px; }
+.form-select option { background: var(--bg); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+.star-rating-input { display: flex; gap: .2rem; }
+.star-btn {
+  background: none; border: none; font-size: 1.15rem;
+  color: var(--ink3); transition: color .1s; padding: 0;
+}
+.star-btn.active, .star-btn:hover { color: #C9A84C; }
+
+/* ── DETAIL MODAL ── */
+.detail-hero { display: flex; gap: 1.1rem; margin-bottom: 1.25rem; }
+.detail-poster {
+  width: 100px; height: 150px; object-fit: cover;
+  background: var(--bg3); flex-shrink: 0; border: 1px solid var(--border);
+}
+.detail-info { flex: 1; }
+.detail-title { font-family: var(--display); font-size: 1.25rem; margin-bottom: .2rem; line-height: 1.2; }
+.detail-meta { font-family: var(--ui); font-size: .62rem; color: var(--ink3); margin-bottom: .7rem; line-height: 1.8; letter-spacing: .05em; }
+.detail-overview { font-size: .85rem; color: var(--ink2); line-height: 1.75; margin-bottom: 1rem; }
+.detail-section-label { font-family: var(--ui); font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink3); margin-bottom: .5rem; }
+.list-select-grid { display: flex; flex-wrap: wrap; gap: .35rem; }
+.list-toggle-btn {
+  padding: .28rem .7rem; font-family: var(--ui);
+  font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid var(--border2); background: transparent; color: var(--ink3); transition: all .15s;
+}
+.list-toggle-btn.in-list { border-color: var(--ink); color: var(--ink); background: var(--bg2); }
+
+/* ── LISTS PAGE ── */
+.lists-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.lists-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1px; background: var(--border); }
+.list-card {
+  background: var(--bg); padding: 1.1rem;
+  transition: background .15s; cursor: pointer;
+}
+.list-card:hover { background: var(--bg2); }
+.list-card-name { font-family: var(--display); font-size: .95rem; margin-bottom: .2rem; }
+.list-card-count { font-family: var(--ui); font-size: .6rem; color: var(--ink3); letter-spacing: .1em; }
+.list-card-previews { display: flex; gap: 3px; margin-top: .75rem; }
+.list-preview-poster { width: 32px; height: 48px; object-fit: cover; background: var(--bg3); }
+.list-card-actions { display: flex; gap: .35rem; margin-top: .75rem; justify-content: flex-end; }
+
+/* ── REVIEWS ── */
+.review-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-left: 3px solid var(--ink);
+  padding: 1.1rem; margin-bottom: .75rem;
+}
+.review-header { display: flex; align-items: flex-start; gap: .85rem; margin-bottom: .65rem; }
+.review-poster-sm { width: 40px; height: 60px; object-fit: cover; background: var(--bg3); flex-shrink: 0; border: 1px solid var(--border); }
+.review-title { font-weight: 700; font-size: .88rem; margin-bottom: .1rem; }
+.review-date { font-family: var(--ui); font-size: .6rem; color: var(--ink3); }
+.review-text { font-size: .85rem; color: var(--ink2); line-height: 1.75; font-style: italic; }
+.review-actions { display: flex; gap: .35rem; margin-top: .65rem; justify-content: flex-end; }
+
+/* ── STATS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1px; background: var(--border); margin-bottom: 1.5rem; }
+.stat-card { background: var(--bg); padding: 1.1rem; }
+.stat-card-label { font-family: var(--ui); font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink3); margin-bottom: .35rem; }
+.stat-card-val { font-family: var(--display); font-size: 2rem; color: var(--ink); line-height: 1; }
+.stat-card-sub { font-family: var(--ui); font-size: .6rem; color: var(--ink3); margin-top: .2rem; }
+.genre-bar-wrap { margin-bottom: .55rem; }
+.genre-bar-label { display: flex; justify-content: space-between; font-family: var(--ui); font-size: .62rem; color: var(--ink2); margin-bottom: .18rem; }
+.genre-bar-track { background: var(--bg2); height: 3px; }
+.genre-bar-fill { background: var(--ink); height: 3px; transition: width .5s ease; }
+.genre-section-label { font-family: var(--ui); font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink3); margin-bottom: .75rem; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 1.25rem; right: 1.25rem;
+  background: var(--ink); color: var(--cream);
+  border-left: 3px solid #C9A84C;
+  padding: .75rem 1rem; font-family: var(--ui);
+  font-size: .65rem; letter-spacing: .08em;
+  z-index: 9000; transform: translateY(16px); opacity: 0;
+  transition: all .25s; max-width: 260px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── RESPONSIVE ── */
+.mobile-nav-btn { display: none !important; }
+@media (max-width: 650px) {
+  .shell { grid-template-columns: 1fr; }
+  aside { position: fixed; left: -200px; top: 0; height: 100vh; z-index: 300; transition: left .25s; }
+  aside.open { left: 0; }
+  .mobile-nav-btn { display: flex !important; }
+  .diary-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .form-grid { grid-template-columns: 1fr; }
+  .detail-hero { flex-direction: column; }
+  .search-input { width: 140px; }
+}
+
+/* ── TOP 5 ── */
+.top5-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.top5-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.top5-label {
+  font-family: var(--ui);
+  font-size: .55rem; letter-spacing: .25em; text-transform: uppercase; color: var(--ink3);
+}
+.top5-title {
+  font-family: var(--display);
+  font-size: 1rem; color: var(--ink);
+}
+.top5-row {
+  display: flex; gap: .75rem; overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  padding-bottom: .25rem;
+}
+.top5-row::-webkit-scrollbar { display: none; }
+.top5-card {
+  flex-shrink: 0; width: 105px; position: relative; cursor: pointer;
+  transition: transform .15s;
+}
+.top5-card:hover { transform: translateY(-3px); }
+
+.top5-poster {
+  width: 100%; aspect-ratio: 2/3; object-fit: cover;
+  display: block; background: var(--bg3);
+  border: 1px solid var(--border);
+}
+.top5-poster-placeholder {
+  width: 100%; aspect-ratio: 2/3; background: var(--bg2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: var(--ink3);
+}
+.top5-info { padding: .45rem 0 0; }
+.top5-name {
+  font-size: .72rem; font-weight: 700; color: var(--ink);
+  line-height: 1.3; margin-bottom: .15rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.top5-meta { font-family: var(--ui); font-size: .55rem; color: var(--ink3); }
+.top5-tabs {
+  display: flex; border: 1px solid var(--border2);
+}
+.top5-tab {
+  padding: .28rem .75rem;
+  font-family: var(--ui); font-size: .58rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  border: none; border-right: 1px solid var(--border2);
+  background: transparent; color: var(--ink3);
+  cursor: pointer; transition: all .15s;
+}
+.top5-tab:last-child { border-right: none; }
+.top5-tab:hover { color: var(--ink); background: var(--bg2); }
+.top5-tab.active { background: var(--ink); color: var(--cream); }
+
+/* ── TOP5 EDITOR ── */
+.t5e-row {
+  display: flex; gap: .6rem; align-items: flex-start;
+  padding: .75rem 0; border-bottom: 1px solid var(--border);
+}
+.t5e-row:first-child { padding-top: 0; }
+.t5e-row:last-child { border-bottom: none; }
+.t5e-num { font-family: var(--display); font-size: 1.1rem; color: var(--ink3); width: 18px; flex-shrink: 0; padding-top: .1rem; }
+.t5e-thumb { width: 40px; height: 60px; object-fit: cover; background: var(--bg3); border: 1px solid var(--border); flex-shrink: 0; }
+.t5e-thumb-placeholder { width: 40px; height: 60px; background: var(--bg3); border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--ink3); font-size: .8rem; }
+.t5e-fields { flex: 1; display: flex; flex-direction: column; gap: .35rem; }
+.t5e-search-wrap { position: relative; }
+.t5e-search { width: 100%; background: var(--bg2); border: 1px solid var(--border2); color: var(--ink); padding: .4rem .65rem; font-size: .75rem; outline: none; font-family: var(--mono); transition: border .15s; }
+.t5e-search:focus { border-color: var(--ink); }
+.t5e-results { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: var(--bg); border: 1px solid var(--border2); z-index: 300; max-height: 200px; overflow-y: auto; display: none; }
+.t5e-results.show { display: block; }
+.t5e-result-item { display: flex; gap: .6rem; align-items: center; padding: .5rem .75rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; font-size: .75rem; }
+.t5e-result-item:last-child { border-bottom: none; }
+.t5e-result-item:hover { background: var(--bg2); }
+.t5e-result-poster { width: 24px; height: 36px; object-fit: cover; background: var(--bg3); flex-shrink: 0; }
+.t5e-year { width: 70px; background: var(--bg2); border: 1px solid var(--border2); color: var(--ink); padding: .4rem .65rem; font-size: .75rem; outline: none; font-family: var(--mono); }
+.t5e-clear { background: none; border: none; color: var(--ink3); font-size: .8rem; padding: .4rem; transition: color .15s; flex-shrink: 0; }
+.t5e-clear:hover { color: var(--red); }
+.t5e-tab-row { display: flex; border: 1px solid var(--border2); width: fit-content; margin-bottom: 1rem; }
+.t5e-tab { padding: .28rem .85rem; font-family: var(--ui); font-size: .58rem; letter-spacing: .16em; text-transform: uppercase; border: none; border-right: 1px solid var(--border2); background: transparent; color: var(--ink3); cursor: pointer; transition: all .15s; }
+.t5e-tab:last-child { border-right: none; }
+.t5e-tab.active { background: var(--ink); color: var(--cream); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-word">Reel</div>
+      <div class="logo-sub">Film &amp; TV Diary</div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showPage('diary')" data-page="diary">
+        <span class="nav-icon">◈</span> Diary
+      </div>
+      <div class="nav-item" onclick="showPage('reviews')" data-page="reviews">
+        <span class="nav-icon">◇</span> Reviews
+      </div>
+      <div class="nav-item" onclick="showPage('lists')" data-page="lists">
+        <span class="nav-icon">◻</span> Lists
+      </div>
+      <div class="nav-item" onclick="showPage('stats')" data-page="stats">
+        <span class="nav-icon">◈</span> Stats
+      </div>
+    </nav>
+    <div class="sidebar-stats">
+      <div class="stat">
+        <div class="stat-label">Films</div>
+        <div class="stat-val" id="sb-movies">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Shows</div>
+        <div class="stat-val" id="sb-shows">0</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <!-- TOPBAR — no title, just actions -->
+    <div class="topbar">
+      <button class="btn btn-ghost mobile-nav-btn" style="padding:.45rem .85rem;font-size:1rem;line-height:1" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div class="search-wrap" id="searchWrap">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search TMDB..." autocomplete="off"/>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Log</button>
+    </div>
+
+    <div class="content">
+
+      <!-- DIARY -->
+      <div class="page active" id="page-diary">
+
+        <!-- TOP 5 -->
+        <div class="top5-section">
+          <div class="top5-header">
+            <div>
+              <div class="top5-label">Personal Favourites</div>
+              <div class="top5-title">My Top 5</div>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <div class="top5-tabs">
+                <button class="top5-tab active" onclick="switchTop5('movies', this)">Films</button>
+                <button class="top5-tab" onclick="switchTop5('series', this)">Series</button>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="openTop5Editor()">Edit</button>
+            </div>
+          </div>
+          <div class="top5-row" id="top5-movies"></div>
+          <div class="top5-row" id="top5-series" style="display:none"></div>
+        </div>
+
+        <div class="diary-filters">
+          <button class="filter-chip active" onclick="filterDiary('all',this)">All</button>
+          <button class="filter-chip" onclick="filterDiary('movie',this)">Films</button>
+          <button class="filter-chip" onclick="filterDiary('tv',this)">Shows</button>
+          <button class="filter-chip" onclick="filterDiary('watched',this)">Watched</button>
+          <button class="filter-chip" onclick="filterDiary('watchlist',this)">Watchlist</button>
+          <button class="filter-chip" onclick="filterDiary('watching',this)">Watching</button>
+        </div>
+        <div class="diary-grid" id="diaryGrid"></div>
+      </div>
+
+      <!-- REVIEWS -->
+      <div class="page" id="page-reviews">
+        <div id="reviewsList"></div>
+      </div>
+
+      <!-- LISTS -->
+      <div class="page" id="page-lists">
+        <div class="lists-header">
+          <span style="font-family:var(--ui);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3)">Your Collections</span>
+          <button class="btn btn-primary btn-sm" onclick="openCreateListModal()">+ New List</button>
+        </div>
+        <div class="lists-grid" id="listsGrid"></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="page" id="page-stats">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <span style="font-family:var(--ui);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3)">Your Numbers</span>
+          <button class="btn btn-ghost btn-sm" onclick="openExportModal()">↓ Export List</button>
+        </div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="genre-section-label">Top Genres</div>
+        <div id="genreBars"></div>
+      </div>
+
+    </div>
+  </main>
+</div><!-- end shell -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- ADD/EDIT -->
+<div class="modal-backdrop" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="addModalTitle">Log a Film or Show</div>
+        <div style="font-family:var(--ui);font-size:.6rem;color:var(--ink3);margin-top:.2rem;letter-spacing:.08em" id="addModalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <input type="hidden" id="logTmdbId"/>
+      <input type="hidden" id="logPosterPath"/>
+      <div class="form-row">
+        <label class="form-label">Title</label>
+        <input class="form-input" id="logTitle" type="text" placeholder="e.g. Parasite"/>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="logType">
+            <option value="movie">Film</option>
+            <option value="tv">TV Show</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="logStatus">
+            <option value="watched">Watched</option>
+            <option value="watchlist">Watchlist</option>
+            <option value="watching">Watching</option>
+            <option value="dropped">Dropped</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Date Watched</label>
+          <input class="form-input" id="logDate" type="date"/>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Year</label>
+          <input class="form-input" id="logYear" type="number" placeholder="2024" min="1900" max="2099"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Rating</label>
+        <div class="star-rating-input" id="starRatingInput">
+          <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+          <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+          <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+          <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+          <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Review / Notes</label>
+        <textarea class="form-textarea" id="logReview" placeholder="What did you think..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Genres (comma separated)</label>
+        <input class="form-input" id="logGenres" type="text" placeholder="Drama, Thriller"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLog()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="modal-backdrop" id="detailModal">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div class="modal-title" id="detailModalTitle"></div>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="detailModalBody"></div>
+    <div class="modal-footer" id="detailModalFooter"></div>
+  </div>
+</div>
+
+<!-- CREATE LIST -->
+<div class="modal-backdrop" id="createListModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">New List</div>
+      <button class="modal-close" onclick="closeModal('createListModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="form-label">List Name</label>
+        <input class="form-input" id="newListName" type="text" placeholder="e.g. Favourites..."/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Description (optional)</label>
+        <input class="form-input" id="newListDesc" type="text" placeholder="A short description"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('createListModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createList()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIST DETAIL -->
+<div class="modal-backdrop" id="listDetailModal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="listDetailTitle"></div>
+        <div style="font-family:var(--ui);font-size:.6rem;color:var(--ink3);margin-top:.15rem" id="listDetailDesc"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('listDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="listDetailBody"></div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-backdrop" id="exportModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Export List</div>
+      <button class="modal-close" onclick="closeModal('exportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="form-label">List Title</label>
+        <input class="form-input" id="exportTitle" type="text" placeholder="e.g. My Top Films of 2024"/>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Filter by Type</label>
+          <select class="form-select" id="exportType">
+            <option value="all">All</option>
+            <option value="movie">Films only</option>
+            <option value="tv">Series only</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Filter by Year</label>
+          <input class="form-input" id="exportYear" type="number" placeholder="e.g. 2024 (optional)" min="1900" max="2099"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Filter by Status</label>
+        <select class="form-select" id="exportStatus">
+          <option value="all">All</option>
+          <option value="watched">Watched</option>
+          <option value="watchlist">Watchlist</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Max entries</label>
+        <select class="form-select" id="exportMax">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+      <div style="margin-top:1rem;border:1px solid var(--border);padding:.75rem;background:var(--bg2)">
+        <div style="font-family:var(--ui);font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);margin-bottom:.4rem">Preview count</div>
+        <div id="exportPreviewCount" style="font-size:.85rem;color:var(--ink2)">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('exportModal')">Cancel</button>
+      <button class="btn btn-ghost btn-sm" onclick="generateExport('jpg')">↓ JPG</button>
+      <button class="btn btn-primary" onclick="generateExport('png')">↓ PNG</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP 5 EDITOR MODAL -->
+<div class="modal-backdrop" id="top5Modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title">Edit My Top 5</div>
+      <button class="modal-close" onclick="closeModal('top5Modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="t5e-tab-row">
+        <button class="t5e-tab active" onclick="switchEditorTab('movies',this)">Films</button>
+        <button class="t5e-tab" onclick="switchEditorTab('series',this)">Series</button>
+      </div>
+      <div id="t5e-body"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('top5Modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTop5()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const TMDB_KEY = 'YOUR_TMDB_API_KEY';
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const TMDB_IMG  = 'https://image.tmdb.org/t/p/w200';
+const TMDB_IMG_LG = 'https://image.tmdb.org/t/p/w500';
+
+let db = { entries: [], lists: [] };
+
+function loadDB() {
+  try { db = JSON.parse(localStorage.getItem('reel_db')) || { entries: [], lists: [] }; } catch(e) {}
+  if (!db.lists) db.lists = [];
+  if (!db.entries) db.entries = [];
+  const defaults = ['Watchlist', 'Favourites', 'Watched'];
+  defaults.forEach(name => {
+    if (!db.lists.find(l => l.name === name))
+      db.lists.push({ id: uid(), name, desc: '', items: [] });
+  });
+  saveDB();
+}
+function saveDB() { localStorage.setItem('reel_db', JSON.stringify(db)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+const pageTitles = { diary:'Diary', reviews:'Reviews', lists:'Lists', stats:'Statistics' };
+let currentPage = 'diary';
+
+function showPage(p) {
+  currentPage = p;
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === p));
+  document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.toggle('active', el.dataset.bnav === p));
+  if (p === 'diary')   renderDiary();
+  if (p === 'reviews') renderReviews();
+  if (p === 'lists')   renderLists();
+  if (p === 'stats')   renderStats();
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// TMDB SEARCH
+let searchTimer;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (!q) { closeSearchResults(); return; }
+  searchTimer = setTimeout(() => tmdbSearch(q), 400);
+});
+document.addEventListener('click', e => {
+  if (!document.getElementById('searchWrap').contains(e.target)) closeSearchResults();
+});
+
+async function tmdbSearch(q) {
+  if (TMDB_KEY === 'YOUR_TMDB_API_KEY') { showSearchFallback(q); return; }
+  try {
+    const res = await fetch(`${TMDB_BASE}/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&page=1`);
+    const data = await res.json();
+    showSearchResults(data.results.filter(r => r.media_type==='movie'||r.media_type==='tv').slice(0,8));
+  } catch(e) { showSearchFallback(q); }
+}
+
+function showSearchResults(results) {
+  const box = document.getElementById('searchResults');
+  if (!results.length) { box.innerHTML = '<div style="padding:.9rem;color:var(--ink3);font-size:.75rem;text-align:center">No results</div>'; box.classList.add('show'); return; }
+  box.innerHTML = results.map(r => {
+    const title = r.title || r.name || 'Unknown';
+    const year  = (r.release_date || r.first_air_date || '').slice(0,4);
+    const poster = r.poster_path ? `<img class="sr-poster" src="${TMDB_IMG}${r.poster_path}" alt="">` : `<div class="sr-poster" style="display:flex;align-items:center;justify-content:center">◈</div>`;
+    return `<div class="search-result-item" onclick='selectSearchResult(${JSON.stringify({id:r.id,title,year,type:r.media_type,poster:r.poster_path||"",overview:r.overview||"",genres:[]})})'>
+      ${poster}
+      <div class="sr-info">
+        <div class="sr-title">${title}<span class="sr-type">${r.media_type==='movie'?'Film':'TV'}</span></div>
+        <div class="sr-meta">${year}</div>
+      </div>
+    </div>`;
+  }).join('');
+  box.classList.add('show');
+}
+
+function showSearchFallback(q) {
+  const box = document.getElementById('searchResults');
+  box.innerHTML = `<div class="search-result-item" onclick="openAddManual('${q.replace(/'/g,"\\'")}')">
+    <div class="sr-poster" style="display:flex;align-items:center;justify-content:center;font-size:1rem">✎</div>
+    <div class="sr-info">
+      <div class="sr-title">Log "${q}" manually</div>
+      <div class="sr-meta" style="color:var(--ink3)">Add TMDB API key for auto search</div>
+    </div>
+  </div>`;
+  box.classList.add('show');
+}
+
+function closeSearchResults() {
+  document.getElementById('searchResults').classList.remove('show');
+  document.getElementById('searchInput').value = '';
+}
+function selectSearchResult(item) { closeSearchResults(); openAddModal(item); }
+function openAddManual(title) { closeSearchResults(); openAddModal({ title, year:'', type:'movie', poster:'', genres:[] }); }
+
+// ADD/EDIT MODAL
+let currentRating = 0;
+
+function openAddModal(prefill) {
+  document.getElementById('editId').value = '';
+  document.getElementById('logTmdbId').value = prefill?.id || '';
+  document.getElementById('logPosterPath').value = prefill?.poster || '';
+  document.getElementById('logTitle').value = prefill?.title || '';
+  document.getElementById('logType').value = prefill?.type || 'movie';
+  document.getElementById('logYear').value = prefill?.year || '';
+  document.getElementById('logDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('logStatus').value = 'watched';
+  document.getElementById('logReview').value = '';
+  document.getElementById('logGenres').value = (prefill?.genres||[]).join(', ');
+  document.getElementById('addModalTitle').textContent = prefill?.title || 'Log a Film or Show';
+  document.getElementById('addModalSub').textContent = prefill?.year ? prefill.year + '  ·  ' + (prefill.type==='movie'?'Film':'TV Show') : '';
+  setRating(0);
+  document.getElementById('addModal').classList.add('show');
+}
+
+function openEditModal(id) {
+  const e = db.entries.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('editId').value = e.id;
+  document.getElementById('logTmdbId').value = e.tmdbId || '';
+  document.getElementById('logPosterPath').value = e.poster || '';
+  document.getElementById('logTitle').value = e.title;
+  document.getElementById('logType').value = e.type;
+  document.getElementById('logYear').value = e.year || '';
+  document.getElementById('logDate').value = e.date || '';
+  document.getElementById('logStatus').value = e.status;
+  document.getElementById('logReview').value = e.review || '';
+  document.getElementById('logGenres').value = (e.genres||[]).join(', ');
+  document.getElementById('addModalTitle').textContent = 'Edit — ' + e.title;
+  document.getElementById('addModalSub').textContent = '';
+  setRating(e.rating || 0);
+  document.getElementById('addModal').classList.add('show');
+}
+
+function setRating(val) {
+  currentRating = val;
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.val) <= val));
+}
+
+function saveLog() {
+  const id = document.getElementById('editId').value;
+  const entry = {
+    id:      id || uid(),
+    tmdbId:  document.getElementById('logTmdbId').value,
+    poster:  document.getElementById('logPosterPath').value,
+    title:   document.getElementById('logTitle').value.trim(),
+    type:    document.getElementById('logType').value,
+    year:    document.getElementById('logYear').value,
+    date:    document.getElementById('logDate').value,
+    status:  document.getElementById('logStatus').value,
+    rating:  currentRating,
+    review:  document.getElementById('logReview').value.trim(),
+    genres:  document.getElementById('logGenres').value.split(',').map(g=>g.trim()).filter(Boolean),
+    addedAt: id ? (db.entries.find(x=>x.id===id)||{}).addedAt : Date.now(),
+  };
+  if (!entry.title) { showToast('Please enter a title'); return; }
+  if (id) { const idx = db.entries.findIndex(x=>x.id===id); if (idx!==-1) db.entries[idx]=entry; }
+  else db.entries.unshift(entry);
+  saveDB();
+  closeModal('addModal');
+  showToast((id?'Updated':'Logged') + ' — ' + entry.title);
+  refreshCurrentPage();
+  updateSidebarStats();
+}
+
+function deleteEntry(id) {
+  if (!confirm('Remove this entry?')) return;
+  db.entries = db.entries.filter(x => x.id !== id);
+  db.lists.forEach(l => { l.items = l.items.filter(i => i !== id); });
+  saveDB(); closeModal('detailModal');
+  showToast('Entry removed'); refreshCurrentPage(); updateSidebarStats();
+}
+
+// DETAIL MODAL
+function openDetail(id) {
+  const e = db.entries.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('detailModalTitle').textContent = e.title;
+  const stars = renderStars(e.rating);
+  const poster = e.poster
+    ? `<img class="detail-poster" src="${TMDB_IMG_LG}${e.poster}" alt="">`
+    : `<div class="detail-poster" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--bg3)">◈</div>`;
+  const listBtns = db.lists.map(l => {
+    const inList = l.items.includes(id);
+    return `<button class="list-toggle-btn ${inList?'in-list':''}" onclick="toggleInList('${l.id}','${id}',this)">${inList?'✓ ':''} ${l.name}</button>`;
+  }).join('');
+  document.getElementById('detailModalBody').innerHTML = `
+    <div class="detail-hero">
+      ${poster}
+      <div class="detail-info">
+        <div class="detail-title">${e.title}</div>
+        <div class="detail-meta">${e.year?e.year+' · ':''}${e.type==='movie'?'Film':'TV Show'}<br>Status: ${statusLabel(e.status)}${e.date?'<br>Logged: '+e.date:''}</div>
+        <div style="margin-bottom:.65rem">${stars}</div>
+        ${e.genres?.length?`<div style="display:flex;gap:.25rem;flex-wrap:wrap">${e.genres.map(g=>`<span style="font-family:var(--ui);font-size:.55rem;padding:.1rem .4rem;border:1px solid var(--border2);color:var(--ink3)">${g}</span>`).join('')}</div>`:''}
+      </div>
+    </div>
+    ${e.review?`<div class="detail-overview" style="border-left:2px solid var(--border2);padding-left:.85rem;margin-bottom:1rem">"${e.review}"</div>`:''}
+    <div class="detail-section-label" style="margin-top:.75rem">Add to list</div>
+    <div class="list-select-grid">${listBtns}</div>`;
+  document.getElementById('detailModalFooter').innerHTML = `
+    <button class="btn btn-danger btn-sm" onclick="deleteEntry('${id}')">Remove</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeModal('detailModal');openEditModal('${id}')">Edit</button>
+    <button class="btn btn-ghost" onclick="closeModal('detailModal')">Close</button>`;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function toggleInList(listId, entryId, btn) {
+  const list = db.lists.find(l => l.id === listId);
+  if (!list) return;
+  const idx = list.items.indexOf(entryId);
+  if (idx === -1) { list.items.push(entryId); btn.classList.add('in-list'); btn.textContent = '✓ ' + list.name; showToast('Added to ' + list.name); }
+  else { list.items.splice(idx,1); btn.classList.remove('in-list'); btn.textContent = list.name; showToast('Removed from ' + list.name); }
+  saveDB();
+}
+
+// DIARY
+let currentFilter = 'all';
+function filterDiary(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDiary();
+}
+
+function renderDiary() {
+  const grid = document.getElementById('diaryGrid');
+  let entries = [...db.entries];
+  if (currentFilter === 'movie')     entries = entries.filter(e => e.type==='movie');
+  if (currentFilter === 'tv')        entries = entries.filter(e => e.type==='tv');
+  if (currentFilter === 'watched')   entries = entries.filter(e => e.status==='watched');
+  if (currentFilter === 'watchlist') entries = entries.filter(e => e.status==='watchlist');
+  if (currentFilter === 'watching')  entries = entries.filter(e => e.status==='watching');
+  if (!entries.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">Your diary is empty</div><div class="empty-desc">Search for a film or show,<br>or click <strong>+ Log</strong> to add manually.</div></div>`;
+    return;
+  }
+  grid.innerHTML = entries.map(e => {
+    const poster = e.poster
+      ? `<img class="card-poster" src="${TMDB_IMG}${e.poster}" alt="${e.title}" loading="lazy">`
+      : `<div class="card-poster-placeholder"><span style="font-size:1.5rem">◈</span><span>${e.title.slice(0,12)}</span></div>`;
+    const stars = e.rating ? `<div class="card-rating">${'★'.repeat(e.rating)}${'☆'.repeat(5-e.rating)}</div>` : '';
+    return `<div class="diary-card" onclick="openDetail('${e.id}')">
+      ${poster}
+      <div class="card-type-badge">${e.type==='movie'?'Film':'TV'}</div>
+      ${e.status!=='watched'?`<div class="card-list-badge">${statusLabel(e.status)}</div>`:''}
+      <div class="card-overlay-always">${stars}<div class="card-title">${e.title}</div><div class="card-year">${e.year||''}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// REVIEWS
+function renderReviews() {
+  const list = document.getElementById('reviewsList');
+  const reviewed = db.entries.filter(e => e.review);
+  if (!reviewed.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">✎</div><div class="empty-title">No reviews yet</div><div class="empty-desc">Add a note when logging.</div></div>`; return;
+  }
+  list.innerHTML = reviewed.map(e => {
+    const poster = e.poster
+      ? `<img class="review-poster-sm" src="${TMDB_IMG}${e.poster}" alt="">`
+      : `<div class="review-poster-sm" style="display:flex;align-items:center;justify-content:center">◈</div>`;
+    return `<div class="review-card">
+      <div class="review-header">${poster}
+        <div style="flex:1">
+          <div class="review-title">${e.title}${e.year?' ('+e.year+')':''}</div>
+          <div style="margin:.15rem 0">${renderStars(e.rating)}</div>
+          <div class="review-date">${e.date||''}</div>
+        </div>
+      </div>
+      <div class="review-text">${e.review}</div>
+      <div class="review-actions"><button class="btn btn-ghost btn-sm" onclick="openEditModal('${e.id}')">Edit</button></div>
+    </div>`;
+  }).join('');
+}
+
+// LISTS
+function renderLists() {
+  const grid = document.getElementById('listsGrid');
+  grid.innerHTML = db.lists.map(l => {
+    const items = l.items.map(id => db.entries.find(e=>e.id===id)).filter(Boolean);
+    const previews = items.slice(0,5).map(e => e.poster
+      ? `<img class="list-preview-poster" src="${TMDB_IMG}${e.poster}" alt="">`
+      : `<div class="list-preview-poster" style="display:flex;align-items:center;justify-content:center;font-size:.7rem">◈</div>`).join('');
+    return `<div class="list-card">
+      <div onclick="openListDetail('${l.id}')">
+        <div class="list-card-name">${l.name}</div>
+        ${l.desc?`<div style="font-family:var(--ui);font-size:.62rem;color:var(--ink3);margin-bottom:.4rem">${l.desc}</div>`:''}
+        <div class="list-card-count">${items.length} ${items.length===1?'title':'titles'}</div>
+        <div class="list-card-previews">${previews}</div>
+      </div>
+      <div class="list-card-actions">
+        <button class="btn btn-danger btn-sm" onclick="deleteList('${l.id}')">Delete</button>
+        <button class="btn btn-ghost btn-sm" onclick="openListDetail('${l.id}')">View →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openCreateListModal() {
+  document.getElementById('newListName').value = '';
+  document.getElementById('newListDesc').value = '';
+  document.getElementById('createListModal').classList.add('show');
+}
+function createList() {
+  const name = document.getElementById('newListName').value.trim();
+  if (!name) { showToast('Enter a list name'); return; }
+  db.lists.push({ id: uid(), name, desc: document.getElementById('newListDesc').value.trim(), items: [] });
+  saveDB(); closeModal('createListModal'); renderLists(); showToast('List created — ' + name);
+}
+function deleteList(id) {
+  if (!confirm('Delete this list?')) return;
+  db.lists = db.lists.filter(l => l.id !== id);
+  saveDB(); renderLists(); showToast('List deleted');
+}
+function openListDetail(id) {
+  const list = db.lists.find(l => l.id === id);
+  if (!list) return;
+  const items = list.items.map(i => db.entries.find(e=>e.id===i)).filter(Boolean);
+  document.getElementById('listDetailTitle').textContent = list.name;
+  document.getElementById('listDetailDesc').textContent = list.desc || items.length + ' titles';
+  const body = document.getElementById('listDetailBody');
+  body.innerHTML = !items.length
+    ? `<div class="empty-state" style="padding:1.5rem 0"><div class="empty-icon">◻</div><div class="empty-title">This list is empty</div><div class="empty-desc">Open a film and add it to this list.</div></div>`
+    : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.85rem">${items.map(e=>{
+        const poster = e.poster?`<img class="card-poster" src="${TMDB_IMG}${e.poster}" alt="" loading="lazy">`:`<div class="card-poster-placeholder"><span>◈</span></div>`;
+        return `<div style="cursor:pointer" onclick="closeModal('listDetailModal');openDetail('${e.id}')"><div style="position:relative">${poster}<div class="card-overlay-always"><div class="card-title">${e.title}</div><div class="card-year">${e.year||''}</div></div></div></div>`;
+      }).join('')}</div>`;
+  document.getElementById('listDetailModal').classList.add('show');
+}
+
+// STATS
+function renderStats() {
+  const entries = db.entries;
+  const rated = entries.filter(e=>e.rating);
+  const avgRating = rated.length ? (rated.reduce((s,e)=>s+e.rating,0)/rated.length).toFixed(1) : '—';
+  const genreCount = {};
+  entries.forEach(e => (e.genres||[]).forEach(g => { genreCount[g]=(genreCount[g]||0)+1; }));
+  const topGenres = Object.entries(genreCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxG = topGenres[0]?.[1] || 1;
+  document.getElementById('statsGrid').innerHTML = [
+    { label:'Films Watched', val:entries.filter(e=>e.type==='movie'&&e.status==='watched').length, sub:'of '+entries.filter(e=>e.type==='movie').length+' logged' },
+    { label:'Shows Watched', val:entries.filter(e=>e.type==='tv'&&e.status==='watched').length, sub:'of '+entries.filter(e=>e.type==='tv').length+' logged' },
+    { label:'Watchlist', val:entries.filter(e=>e.status==='watchlist').length, sub:'to watch' },
+    { label:'Avg Rating', val:avgRating, sub:'out of 5' },
+    { label:'Reviews', val:entries.filter(e=>e.review).length, sub:'written' },
+    { label:'Total Logged', val:entries.length, sub:'films & shows' },
+  ].map(s=>`<div class="stat-card"><div class="stat-card-label">${s.label}</div><div class="stat-card-val">${s.val}</div><div class="stat-card-sub">${s.sub}</div></div>`).join('');
+  document.getElementById('genreBars').innerHTML = topGenres.length
+    ? topGenres.map(([g,n])=>`<div class="genre-bar-wrap"><div class="genre-bar-label"><span>${g}</span><span>${n}</span></div><div class="genre-bar-track"><div class="genre-bar-fill" style="width:${(n/maxG*100).toFixed(0)}%"></div></div></div>`).join('')
+    : `<div style="font-family:var(--ui);font-size:.7rem;color:var(--ink3)">No genre data yet.</div>`;
+}
+
+// HELPERS
+function renderStars(r) {
+  if (!r) return '';
+  return `<div class="card-rating">${Array.from({length:5},(_,i)=>`<span class="star ${i<r?'':'empty'}">${i<r?'★':'☆'}</span>`).join('')}</div>`;
+}
+function statusLabel(s) { return {watched:'Watched',watchlist:'Watchlist',watching:'Watching',dropped:'Dropped'}[s]||s; }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target===m) m.classList.remove('show'); });
+});
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function updateSidebarStats() {
+  document.getElementById('sb-movies').textContent = db.entries.filter(e=>e.type==='movie').length;
+  document.getElementById('sb-shows').textContent  = db.entries.filter(e=>e.type==='tv').length;
+}
+function refreshCurrentPage() {
+  if (currentPage==='diary')   renderDiary();
+  if (currentPage==='reviews') renderReviews();
+  if (currentPage==='lists')   renderLists();
+  if (currentPage==='stats')   renderStats();
+}
+
+// ── TOP 5 DATA ──
+const TOP5_DEFAULTS = {
+  movies: [
+    { title:'Parasite',     year:'2019', poster:'/oqD76VCCLGjHJFBmJMLlZAhKjJs.jpg' },
+    { title:'Inception',    year:'2010', poster:'/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg' },
+    { title:'Whiplash',     year:'2014', poster:'/d5NXSklpcuveaijeSNiEHEAOxnB.jpg' },
+    { title:'Interstellar', year:'2014', poster:'/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg' },
+    { title:'The Godfather',year:'1972', poster:'/gEjNlhZhyHgs2yOTrKAMnFBgHCT.jpg' },
+  ],
+  series: [
+    { title:'Breaking Bad', year:'2008', poster:'/ggFHVNu6YYI5L9pCfOacjizRGt.jpg' },
+    { title:'Chernobyl',    year:'2019', poster:'/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg' },
+    { title:'The Wire',     year:'2002', poster:'/2koX1xLkpTQM4IZebYvKysFW1Nh.jpg' },
+    { title:'Succession',   year:'2018', poster:'/suopoADq0k8YZr4dQXcU6pToj6s.jpg' },
+    { title:'Severance',    year:'2022', poster:'/49WJfeN0moxb9IPfGn8AIqMGskD.jpg' },
+  ]
+};
+
+function loadTop5() {
+  try { return JSON.parse(localStorage.getItem('reel_top5')) || TOP5_DEFAULTS; } catch(e) { return TOP5_DEFAULTS; }
+}
+function saveTop5Data(data) { localStorage.setItem('reel_top5', JSON.stringify(data)); }
+
+function renderTop5() {
+  const data = loadTop5();
+  ['movies','series'].forEach(cat => {
+    const row = document.getElementById('top5-' + cat);
+    row.innerHTML = data[cat].map(item => {
+      const poster = item.poster
+        ? `<img class="top5-poster" src="https://image.tmdb.org/t/p/w200${item.poster}" alt="${item.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+      return `<div class="top5-card">
+        ${poster}
+        <div class="top5-poster-placeholder" style="${item.poster?'display:none':''}">◈</div>
+        <div class="top5-info">
+          <div class="top5-name">${item.title}</div>
+          <div class="top5-meta">${item.year}${item.year?' · ':''}${cat==='movies'?'Film':'Series'}</div>
+          <div style="font-size:.6rem;color:#C9A84C">★★★★★</div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function switchTop5(tab, btn) {
+  document.getElementById('top5-movies').style.display = tab === 'movies' ? 'flex' : 'none';
+  document.getElementById('top5-series').style.display = tab === 'series' ? 'flex' : 'none';
+  document.querySelectorAll('.top5-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── TOP 5 EDITOR ──
+let editorTab = 'movies';
+let editorData = {};
+let t5eTimers = {};
+
+function openTop5Editor() {
+  editorData = JSON.parse(JSON.stringify(loadTop5())); // deep copy
+  editorTab = 'movies';
+  document.querySelectorAll('.t5e-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+  renderEditorRows();
+  document.getElementById('top5Modal').classList.add('show');
+}
+
+function switchEditorTab(tab, btn) {
+  editorTab = tab;
+  document.querySelectorAll('.t5e-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderEditorRows();
+}
+
+function renderEditorRows() {
+  const body = document.getElementById('t5e-body');
+  const items = editorData[editorTab];
+  body.innerHTML = items.map((item, i) => {
+    const thumb = item.poster
+      ? `<img class="t5e-thumb" id="t5e-thumb-${i}" src="https://image.tmdb.org/t/p/w200${item.poster}" alt="">`
+      : `<div class="t5e-thumb-placeholder" id="t5e-thumb-${i}">◈</div>`;
+    return `<div class="t5e-row">
+      <div class="t5e-num">${i+1}</div>
+      ${thumb}
+      <div class="t5e-fields">
+        <div class="t5e-search-wrap">
+          <input class="t5e-search" id="t5e-s-${i}" type="text" placeholder="Search title…"
+            value="${item.title}" oninput="t5eSearch(${i}, this.value)" autocomplete="off"/>
+          <div class="t5e-results" id="t5e-r-${i}"></div>
+        </div>
+        <input class="t5e-year" id="t5e-y-${i}" type="number" placeholder="Year" value="${item.year}" min="1900" max="2099"
+          oninput="editorData[editorTab][${i}].year=this.value"/>
+      </div>
+      <button class="t5e-clear" title="Clear" onclick="t5eClear(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function t5eSearch(idx, q) {
+  clearTimeout(t5eTimers[idx]);
+  const box = document.getElementById(`t5e-r-${idx}`);
+  if (!q.trim()) { box.classList.remove('show'); return; }
+  t5eTimers[idx] = setTimeout(async () => {
+    if (TMDB_KEY === 'YOUR_TMDB_API_KEY') {
+      box.innerHTML = `<div class="t5e-result-item" style="color:var(--ink3);font-size:.7rem">Add TMDB API key for search</div>`;
+      box.classList.add('show'); return;
+    }
+    try {
+      const type = editorTab === 'movies' ? 'movie' : 'tv';
+      const res = await fetch(`${TMDB_BASE}/search/${type}?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      const results = (data.results || []).slice(0, 5);
+      if (!results.length) { box.innerHTML = `<div class="t5e-result-item" style="color:var(--ink3)">No results</div>`; box.classList.add('show'); return; }
+      box.innerHTML = results.map(r => {
+        const title = r.title || r.name;
+        const year = (r.release_date || r.first_air_date || '').slice(0,4);
+        const poster = r.poster_path ? `<img class="t5e-result-poster" src="${TMDB_IMG}${r.poster_path}">` : `<div class="t5e-result-poster" style="display:flex;align-items:center;justify-content:center">◈</div>`;
+        return `<div class="t5e-result-item" onclick="t5eSelect(${idx},'${title.replace(/'/g,"\\'")}','${year}','${r.poster_path||''}')">
+          ${poster}<span>${title} <span style="color:var(--ink3)">${year}</span></span>
+        </div>`;
+      }).join('');
+      box.classList.add('show');
+    } catch(e) {}
+  }, 350);
+}
+
+function t5eSelect(idx, title, year, poster) {
+  editorData[editorTab][idx] = { title, year, poster };
+  document.getElementById(`t5e-r-${idx}`).classList.remove('show');
+  renderEditorRows();
+}
+
+function t5eClear(idx) {
+  editorData[editorTab][idx] = { title:'', year:'', poster:'' };
+  renderEditorRows();
+}
+
+function saveTop5() {
+  // collect any manually typed titles/years before saving
+  editorData[editorTab].forEach((item, i) => {
+    const titleEl = document.getElementById(`t5e-s-${i}`);
+    const yearEl  = document.getElementById(`t5e-y-${i}`);
+    if (titleEl) item.title = titleEl.value;
+    if (yearEl)  item.year  = yearEl.value;
+  });
+  saveTop5Data(editorData);
+  closeModal('top5Modal');
+  renderTop5();
+  showToast('Top 5 updated');
+}
+
+// close t5e dropdowns on outside click
+document.addEventListener('click', e => {
+  document.querySelectorAll('.t5e-results').forEach(box => {
+    if (!box.parentElement.contains(e.target)) box.classList.remove('show');
+  });
+});
+
+// ── EXPORT ──
+function openExportModal() {
+  document.getElementById('exportTitle').value = 'My Watched List';
+  document.getElementById('exportYear').value = '';
+  document.getElementById('exportType').value = 'all';
+  document.getElementById('exportStatus').value = 'watched';
+  document.getElementById('exportMax').value = '10';
+  updateExportPreview();
+  ['exportType','exportYear','exportStatus','exportMax'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateExportPreview);
+  });
+  document.getElementById('exportModal').classList.add('show');
+}
+
+function getExportEntries() {
+  const type   = document.getElementById('exportType').value;
+  const year   = document.getElementById('exportYear').value.trim();
+  const status = document.getElementById('exportStatus').value;
+  const max    = parseInt(document.getElementById('exportMax').value);
+  let entries = [...db.entries];
+  if (type !== 'all')   entries = entries.filter(e => e.type === type);
+  if (status !== 'all') entries = entries.filter(e => e.status === status);
+  if (year)             entries = entries.filter(e => String(e.year) === year);
+  return entries.slice(0, max);
+}
+
+function updateExportPreview() {
+  const n = getExportEntries().length;
+  document.getElementById('exportPreviewCount').textContent = n + ' entr' + (n===1?'y':'ies') + ' will be included';
+}
+
+async function generateExport(format) {
+  const entries = getExportEntries();
+  if (!entries.length) { showToast('No entries match the filter'); return; }
+
+  const title = document.getElementById('exportTitle').value || 'My List';
+
+  // load html2canvas dynamically
+  if (!window.html2canvas) {
+    showToast('Loading export library…');
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  // load all posters as base64 so canvas can read them cross-origin
+  async function toDataURL(url) {
+    try {
+      const r = await fetch(`https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=120`);
+      const blob = await r.blob();
+      return new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob); });
+    } catch { return null; }
+  }
+
+  showToast('Generating image…');
+  closeModal('exportModal');
+
+  // resolve posters
+  const posters = await Promise.all(entries.map(e =>
+    e.poster ? toDataURL(`https://image.tmdb.org/t/p/w200${e.poster}`) : Promise.resolve(null)
+  ));
+
+  // build hidden render div
+  const COLS = 2;
+  const CARD_W = 220;
+  const CARD_H = 80;
+  const POSTER_W = 52;
+  const POSTER_H = 78;
+  const PAD = 24;
+  const HEADER_H = 100;
+  const rows = Math.ceil(entries.length / COLS);
+  const canvasW = COLS * CARD_W + (COLS + 1) * PAD;
+  const canvasH = HEADER_H + rows * (CARD_H + 12) + PAD * 2;
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${canvasW}px;background:#F5F0E8;font-family:'Courier Prime','Courier New',monospace;padding:0;`;
+
+  // header
+  const hdr = document.createElement('div');
+  hdr.style.cssText = `padding:${PAD}px ${PAD}px 12px;border-bottom:2px solid #1A1510;margin-bottom:16px;`;
+  hdr.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#8A7A65;margin-bottom:4px">REEL · Personal Diary</div>
+    <div style="font-family:'Special Elite',serif;font-size:22px;color:#1A1510;line-height:1.2">${title}</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:#8A7A65;margin-top:4px">${entries.length} titles · ${new Date().getFullYear()}</div>`;
+  wrap.appendChild(hdr);
+
+  // grid
+  const grid = document.createElement('div');
+  grid.style.cssText = `display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 ${PAD}px ${PAD}px;`;
+
+  entries.forEach((e, i) => {
+    const card = document.createElement('div');
+    card.style.cssText = `display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(26,21,16,.1);`;
+
+    const posterWrap = document.createElement('div');
+    posterWrap.style.cssText = `width:${POSTER_W}px;height:${POSTER_H}px;flex-shrink:0;background:#E2DBCC;display:flex;align-items:center;justify-content:center;overflow:hidden;`;
+    if (posters[i]) {
+      const img = document.createElement('img');
+      img.src = posters[i];
+      img.style.cssText = `width:100%;height:100%;object-fit:cover;`;
+      posterWrap.appendChild(img);
+    } else {
+      posterWrap.innerHTML = `<span style="font-size:18px;color:#8A7A65">◈</span>`;
+    }
+
+    const info = document.createElement('div');
+    info.style.cssText = `flex:1;overflow:hidden;`;
+    const stars = e.rating ? '★'.repeat(e.rating) + '☆'.repeat(5-e.rating) : '';
+    info.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:#1A1510;line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:#8A7A65;margin-bottom:4px">${e.year||''}${e.year&&e.type?' · ':''}${e.type==='movie'?'Film':'Series'}</div>
+      ${stars?`<div style="font-size:10px;color:#C9A84C;letter-spacing:1px">${stars}</div>`:''}
+      ${e.review?`<div style="font-size:9px;color:#4A3F30;margin-top:4px;line-height:1.5;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">"${e.review.slice(0,80)}${e.review.length>80?'…':''}"</div>`:''}`;
+
+    card.appendChild(posterWrap);
+    card.appendChild(info);
+    grid.appendChild(card);
+  });
+
+  wrap.appendChild(grid);
+
+  // footer
+  const ftr = document.createElement('div');
+  ftr.style.cssText = `padding:8px ${PAD}px;border-top:1px solid rgba(26,21,16,.12);display:flex;justify-content:space-between;`;
+  ftr.innerHTML = `<span style="font-family:'DM Mono',monospace;font-size:8px;color:#8A7A65;letter-spacing:.12em">REEL — Film & TV Diary</span><span style="font-family:'DM Mono',monospace;font-size:8px;color:#8A7A65">${new Date().toLocaleDateString('en-GB')}</span>`;
+  wrap.appendChild(ftr);
+
+  document.body.appendChild(wrap);
+
+  try {
+    const canvas = await html2canvas(wrap, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#F5F0E8',
+      logging: false,
+    });
+    const link = document.createElement('a');
+    const slug = title.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    link.download = `reel-${slug}.${format}`;
+    link.href = canvas.toDataURL(format === 'jpg' ? 'image/jpeg' : 'image/png', 0.95);
+    link.click();
+    showToast('Image downloaded!');
+  } catch(err) {
+    showToast('Export failed — try again');
+    console.error(err);
+  } finally {
+    document.body.removeChild(wrap);
+  }
+}
+
+loadDB(); renderDiary(); renderTop5(); updateSidebarStats();
+</script>
+</body>
+</html>
