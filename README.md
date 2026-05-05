@@ -1,2 +1,0 @@
-# kino.github.io
-xx
