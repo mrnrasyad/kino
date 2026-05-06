@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>REEL</title>
+<title>kino</title>
+<link rel="icon" type="image/png" href="x/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
 <style>
 :root {
   --bg:      #F5F0E8;
@@ -139,7 +140,7 @@ main { overflow-y: auto; background: var(--bg); }
   padding: .75rem 1.25rem;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
-  position: sticky; top: 0; z-index: 50;
+  position: sticky; top: 0; z-index: 150;
   gap: .6rem;
 }
 .topbar .search-wrap { flex: 1; max-width: 320px; }
@@ -202,7 +203,7 @@ main { overflow-y: auto; background: var(--bg); }
   position: absolute; top: calc(100% + 3px); left: 0; right: 0;
   background: var(--bg);
   border: 1px solid var(--border2);
-  z-index: 200; max-height: 360px; overflow-y: auto; display: none;
+  z-index: 400; max-height: 360px; overflow-y: auto; display: none;
 }
 .search-results.show { display: block; }
 .search-result-item {
@@ -241,10 +242,12 @@ main { overflow-y: auto; background: var(--bg); }
 }
 .diary-filters::-webkit-scrollbar { display: none; }
 .filter-chip {
+  flex: 1;
   flex-shrink: 0;
-  padding: .35rem .85rem;
+  text-align: center;
+  padding: .35rem .25rem;
   font-family: var(--ui);
-  font-size: .58rem; letter-spacing: .16em; text-transform: uppercase;
+  font-size: .56rem; letter-spacing: .08em; text-transform: uppercase;
   border: none; border-right: 1px solid var(--border2);
   color: var(--ink3); background: transparent; transition: all .15s;
 }
@@ -497,12 +500,12 @@ main { overflow-y: auto; background: var(--bg); }
 .top5-card:hover { transform: translateY(-3px); }
 
 .top5-poster {
-  width: 100%; aspect-ratio: 2/3; object-fit: cover;
+  width: 105px; height: 158px; object-fit: cover;
   display: block; background: var(--bg3);
   border: 1px solid var(--border);
 }
 .top5-poster-placeholder {
-  width: 100%; aspect-ratio: 2/3; background: var(--bg2);
+  width: 105px; height: 158px; background: var(--bg2);
   border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   font-size: 1.5rem; color: var(--ink3);
@@ -565,8 +568,8 @@ main { overflow-y: auto; background: var(--bg); }
   <!-- SIDEBAR -->
   <aside id="sidebar">
     <div class="logo">
-      <div class="logo-word">Reel</div>
-      <div class="logo-sub">Film &amp; TV Diary</div>
+      <div class="logo-word">kino</div>
+      <div class="logo-sub">by @mrnrasyad</div>
     </div>
     <nav>
       <div class="nav-item active" onclick="showPage('diary')" data-page="diary">
@@ -842,6 +845,17 @@ main { overflow-y: auto; background: var(--bg); }
         <div style="font-family:var(--ui);font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);margin-bottom:.4rem">Preview count</div>
         <div id="exportPreviewCount" style="font-size:.85rem;color:var(--ink2)">—</div>
       </div>
+      <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+        <div style="font-family:var(--ui);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:.75rem">Customise Image</div>
+        <div class="form-row">
+          <label class="form-label">Header Label (top small text)</label>
+          <input class="form-input" id="exportHeaderLabel" type="text" placeholder="e.g. REEL · Personal Diary" value="REEL · Personal Diary"/>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Footer Text (bottom left)</label>
+          <input class="form-input" id="exportFooterText" type="text" placeholder="e.g. REEL — Film & TV Diary" value="REEL — Film & TV Diary"/>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('exportModal')">Cancel</button>
@@ -926,22 +940,27 @@ document.addEventListener('click', e => {
 });
 
 async function tmdbSearch(q) {
-  if (TMDB_KEY === 'fb44423cd1d823f6864756b0d2ad3511') { showSearchFallback(q); return; }
+  if (!TMDB_KEY) { showSearchFallback(q); return; }
   try {
     const res = await fetch(`${TMDB_BASE}/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&page=1`);
     const data = await res.json();
+    if (data.success === false) { showSearchFallback(q); return; }
     showSearchResults(data.results.filter(r => r.media_type==='movie'||r.media_type==='tv').slice(0,8));
   } catch(e) { showSearchFallback(q); }
 }
 
+let _searchCache = {};
+
 function showSearchResults(results) {
   const box = document.getElementById('searchResults');
   if (!results.length) { box.innerHTML = '<div style="padding:.9rem;color:var(--ink3);font-size:.75rem;text-align:center">No results</div>'; box.classList.add('show'); return; }
-  box.innerHTML = results.map(r => {
+  _searchCache = {};
+  box.innerHTML = results.map((r, i) => {
     const title = r.title || r.name || 'Unknown';
     const year  = (r.release_date || r.first_air_date || '').slice(0,4);
     const poster = r.poster_path ? `<img class="sr-poster" src="${TMDB_IMG}${r.poster_path}" alt="">` : `<div class="sr-poster" style="display:flex;align-items:center;justify-content:center">◈</div>`;
-    return `<div class="search-result-item" onclick='selectSearchResult(${JSON.stringify({id:r.id,title,year,type:r.media_type,poster:r.poster_path||"",overview:r.overview||"",genres:[]})})'>
+    _searchCache[i] = { id: r.id, title, year, type: r.media_type, poster: r.poster_path||'', overview: r.overview||'', genres: [] };
+    return `<div class="search-result-item" onclick="selectSearchResult(_searchCache[${i}])">
       ${poster}
       <div class="sr-info">
         <div class="sr-title">${title}<span class="sr-type">${r.media_type==='movie'?'Film':'TV'}</span></div>
@@ -1354,7 +1373,7 @@ async function t5eSearch(idx, q) {
   const box = document.getElementById(`t5e-r-${idx}`);
   if (!q.trim()) { box.classList.remove('show'); return; }
   t5eTimers[idx] = setTimeout(async () => {
-    if (TMDB_KEY === 'fb44423cd1d823f6864756b0d2ad3511') {
+    if (!TMDB_KEY) {
       box.innerHTML = `<div class="t5e-result-item" style="color:var(--ink3);font-size:.7rem">Add TMDB API key for search</div>`;
       box.classList.add('show'); return;
     }
@@ -1364,11 +1383,13 @@ async function t5eSearch(idx, q) {
       const data = await res.json();
       const results = (data.results || []).slice(0, 5);
       if (!results.length) { box.innerHTML = `<div class="t5e-result-item" style="color:var(--ink3)">No results</div>`; box.classList.add('show'); return; }
-      box.innerHTML = results.map(r => {
+      const cache = {};
+      box.innerHTML = results.map((r, i) => {
         const title = r.title || r.name;
         const year = (r.release_date || r.first_air_date || '').slice(0,4);
         const poster = r.poster_path ? `<img class="t5e-result-poster" src="${TMDB_IMG}${r.poster_path}">` : `<div class="t5e-result-poster" style="display:flex;align-items:center;justify-content:center">◈</div>`;
-        return `<div class="t5e-result-item" onclick="t5eSelect(${idx},'${title.replace(/'/g,"\\'")}','${year}','${r.poster_path||''}')">
+        cache[i] = { title, year, poster: r.poster_path||'' };
+        return `<div class="t5e-result-item" onclick='(function(){const c=${JSON.stringify(cache)};t5eSelect(${idx},c[${i}].title,c[${i}].year,c[${i}].poster)})()'>
           ${poster}<span>${title} <span style="color:var(--ink3)">${year}</span></span>
         </div>`;
       }).join('');
@@ -1445,6 +1466,8 @@ async function generateExport(format) {
   if (!entries.length) { showToast('No entries match the filter'); return; }
 
   const title = document.getElementById('exportTitle').value || 'My List';
+  const headerLabel = document.getElementById('exportHeaderLabel').value || 'REEL · Personal Diary';
+  const footerText  = document.getElementById('exportFooterText').value || 'REEL — Film & TV Diary';
 
   // load html2canvas dynamically
   if (!window.html2canvas) {
@@ -1493,7 +1516,7 @@ async function generateExport(format) {
   const hdr = document.createElement('div');
   hdr.style.cssText = `padding:${PAD}px ${PAD}px 12px;border-bottom:2px solid #1A1510;margin-bottom:16px;`;
   hdr.innerHTML = `
-    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#8A7A65;margin-bottom:4px">REEL · Personal Diary</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#8A7A65;margin-bottom:4px">${headerLabel}</div>
     <div style="font-family:'Special Elite',serif;font-size:22px;color:#1A1510;line-height:1.2">${title}</div>
     <div style="font-family:'DM Mono',monospace;font-size:9px;color:#8A7A65;margin-top:4px">${entries.length} titles · ${new Date().getFullYear()}</div>`;
   wrap.appendChild(hdr);
@@ -1536,7 +1559,7 @@ async function generateExport(format) {
   // footer
   const ftr = document.createElement('div');
   ftr.style.cssText = `padding:8px ${PAD}px;border-top:1px solid rgba(26,21,16,.12);display:flex;justify-content:space-between;`;
-  ftr.innerHTML = `<span style="font-family:'DM Mono',monospace;font-size:8px;color:#8A7A65;letter-spacing:.12em">REEL — Film & TV Diary</span><span style="font-family:'DM Mono',monospace;font-size:8px;color:#8A7A65">${new Date().toLocaleDateString('en-GB')}</span>`;
+  ftr.innerHTML = `<span style="font-family:'DM Mono',monospace;font-size:8px;color:#8A7A65;letter-spacing:.12em">${footerText}</span><span style="font-family:'DM Mono',monospace;font-size:8px;color:#8A7A65">${new Date().toLocaleDateString('en-GB')}</span>`;
   wrap.appendChild(ftr);
 
   document.body.appendChild(wrap);
