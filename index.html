@@ -607,6 +607,7 @@ main { overflow-y: auto; background: var(--bg); }
         <input class="search-input" id="searchInput" type="text" placeholder="Search TMDB..." autocomplete="off"/>
         <div class="search-results" id="searchResults"></div>
       </div>
+      <span id="syncBadge" style="font-family:var(--ui);font-size:.55rem;letter-spacing:.1em;color:var(--ink3);white-space:nowrap"></span>
       <button class="btn btn-primary" onclick="openAddModal()">+ Log</button>
     </div>
 
@@ -889,6 +890,70 @@ main { overflow-y: auto; background: var(--bg); }
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBVZXJqQIa0txjv8mjqplNeI5asoUUJ0VE",
+  authDomain: "kino-88e9e.firebaseapp.com",
+  projectId: "kino-88e9e",
+  storageBucket: "kino-88e9e.firebasestorage.app",
+  messagingSenderId: "776729576295",
+  appId: "1:776729576295:web:bc437d1e0e6b6b864425c2"
+};
+
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+const DB_DOC = doc(firestore, 'reel', 'main');
+const TOP5_DOC = doc(firestore, 'reel', 'top5');
+
+// expose to global scope
+window._firestore = firestore;
+window._DB_DOC = DB_DOC;
+window._TOP5_DOC = TOP5_DOC;
+window._fsSetDoc = setDoc;
+window._fsGetDoc = getDoc;
+window._fsOnSnapshot = onSnapshot;
+window._firebaseReady = true;
+
+// Listen for realtime changes from other devices
+onSnapshot(DB_DOC, snap => {
+  if (!snap.exists()) return;
+  const remote = snap.data();
+  // Only update if remote is newer than local
+  if (remote && remote._updatedAt > (window._lastSave || 0)) {
+    window.db = remote;
+    window._lastSave = remote._updatedAt;
+    localStorage.setItem('reel_db', JSON.stringify(remote));
+    window.refreshCurrentPage && window.refreshCurrentPage();
+    window.updateSidebarStats && window.updateSidebarStats();
+    showSyncBadge('synced');
+  }
+});
+
+onSnapshot(TOP5_DOC, snap => {
+  if (!snap.exists()) return;
+  const remote = snap.data();
+  if (remote && remote._updatedAt > (window._lastTop5Save || 0)) {
+    window._lastTop5Save = remote._updatedAt;
+    localStorage.setItem('reel_top5', JSON.stringify(remote));
+    window.renderTop5 && window.renderTop5();
+  }
+});
+
+function showSyncBadge(state) {
+  const el = document.getElementById('syncBadge');
+  if (!el) return;
+  el.textContent = state === 'saving' ? '↑ Saving…' : state === 'synced' ? '✓ Synced' : '⚠ Offline';
+  el.style.color = state === 'saving' ? 'var(--ink3)' : state === 'synced' ? '#5a9' : '#c66';
+  clearTimeout(el._t);
+  if (state === 'synced') el._t = setTimeout(() => { el.textContent = ''; }, 2500);
+}
+window.showSyncBadge = showSyncBadge;
+</script>
+
 <script>
 const TMDB_KEY = 'fb44423cd1d823f6864756b0d2ad3511';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
@@ -896,19 +961,61 @@ const TMDB_IMG  = 'https://image.tmdb.org/t/p/w200';
 const TMDB_IMG_LG = 'https://image.tmdb.org/t/p/w500';
 
 let db = { entries: [], lists: [] };
+let _lastSave = 0;
 
-function loadDB() {
+async function loadDB() {
+  // Load from localStorage first (instant)
   try { db = JSON.parse(localStorage.getItem('reel_db')) || { entries: [], lists: [] }; } catch(e) {}
   if (!db.lists) db.lists = [];
   if (!db.entries) db.entries = [];
+  ensureDefaultLists();
+
+  // Then try Firestore
+  if (window._firebaseReady) {
+    try {
+      const snap = await window._fsGetDoc(window._DB_DOC);
+      if (snap.exists()) {
+        const remote = snap.data();
+        if (remote._updatedAt > (_lastSave || 0)) {
+          db = remote;
+          _lastSave = remote._updatedAt;
+          localStorage.setItem('reel_db', JSON.stringify(db));
+          ensureDefaultLists();
+        }
+      } else {
+        // First time — push local data to Firestore
+        await saveDB();
+      }
+    } catch(e) { console.warn('Firestore load failed, using local:', e); }
+  }
+
+  refreshCurrentPage();
+  updateSidebarStats();
+}
+
+function ensureDefaultLists() {
   const defaults = ['Watchlist', 'Favourites', 'Watched'];
   defaults.forEach(name => {
     if (!db.lists.find(l => l.name === name))
       db.lists.push({ id: uid(), name, desc: '', items: [] });
   });
-  saveDB();
 }
-function saveDB() { localStorage.setItem('reel_db', JSON.stringify(db)); }
+
+async function saveDB() {
+  db._updatedAt = Date.now();
+  _lastSave = db._updatedAt;
+  localStorage.setItem('reel_db', JSON.stringify(db));
+  if (window._firebaseReady) {
+    window.showSyncBadge && window.showSyncBadge('saving');
+    try {
+      await window._fsSetDoc(window._DB_DOC, db);
+      window.showSyncBadge && window.showSyncBadge('synced');
+    } catch(e) {
+      console.warn('Firestore save failed:', e);
+      window.showSyncBadge && window.showSyncBadge('offline');
+    }
+  }
+}
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
 const pageTitles = { diary:'Diary', reviews:'Reviews', lists:'Lists', stats:'Statistics' };
@@ -1295,6 +1402,12 @@ function refreshCurrentPage() {
   if (currentPage==='stats')   renderStats();
 }
 
+// expose to Firebase module scope
+window.refreshCurrentPage = refreshCurrentPage;
+window.updateSidebarStats = updateSidebarStats;
+window.renderTop5 = () => renderTop5();
+window.db = db;
+
 // ── TOP 5 DATA ──
 const TOP5_DEFAULTS = {
   movies: [
@@ -1316,7 +1429,13 @@ const TOP5_DEFAULTS = {
 function loadTop5() {
   try { return JSON.parse(localStorage.getItem('reel_top5')) || TOP5_DEFAULTS; } catch(e) { return TOP5_DEFAULTS; }
 }
-function saveTop5Data(data) { localStorage.setItem('reel_top5', JSON.stringify(data)); }
+async function saveTop5Data(data) {
+  data._updatedAt = Date.now();
+  localStorage.setItem('reel_top5', JSON.stringify(data));
+  if (window._firebaseReady) {
+    try { await window._fsSetDoc(window._TOP5_DOC, data); } catch(e) {}
+  }
+}
 
 function renderTop5() {
   const data = loadTop5();
@@ -1608,7 +1727,7 @@ async function generateExport(format) {
   }
 }
 
-loadDB(); renderDiary(); renderTop5(); updateSidebarStats(); fetchGenreMap();
+loadDB().then(() => { renderTop5(); fetchGenreMap(); });
 </script>
 </body>
 </html>
